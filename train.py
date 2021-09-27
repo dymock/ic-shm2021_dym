@@ -14,7 +14,7 @@ import numpy as np
 
 LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-BATCH_SIZE = 8
+BATCH_SIZE = 16
 NUM_EPOCHS = 4
 NUM_WORKERS = 4
 IMAGE_HEIGHT = 360
@@ -65,7 +65,7 @@ def check_accuracy(loader, model):
 
 
 
-    loop = tqdm(val_loader)
+    loop = tqdm(loader)
 
     with torch.no_grad():
         for batch,data in enumerate(loop):
