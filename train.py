@@ -16,7 +16,7 @@ LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 BATCH_SIZE = 16
 NUM_EPOCHS = 4
-NUM_WORKERS = 4
+NUM_WORKERS = 8
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
 NUM_CLASSES = 9
@@ -69,11 +69,11 @@ def check_accuracy(loader, model):
 
     with torch.no_grad():
         for batch,data in enumerate(loop):
-            image = data[0]
-            mask = data[1].squeeze().numpy()
+            image = data[0].to(device=DEVICE)
+            mask = data[1].squeeze().to('cpu').numpy()
             predictions = model(image)
             predictions = predictions['out']
-            predictions = torch.argmax(predictions.squeeze(), dim=0).numpy()
+            predictions = torch.argmax(predictions.squeeze(), dim=0).to('cpu').numpy()
 
             union=intersection=0
             for i in range(0,len(predictions)):
@@ -127,7 +127,6 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
     val_loader = DataLoader(train_dataset, batch_size = 1, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
 
-
     for epoch in range(NUM_EPOCHS):
         loss = train_fn(train_loader, model, optimizer, loss_fn, scaler)
         checkpoint = {
@@ -140,7 +139,7 @@ def main():
 
     meanIoU,IoU = check_accuracy(val_loader, model)
     print('meanIoU: '+meanIoU)
-    np.savetxt('IoU.csv',IoU,delimiter='.')
+    np.savetxt('IoU.csv',IoU,delimiter=',')
 
 if __name__ =='__main__':
     main()
