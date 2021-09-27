@@ -125,7 +125,7 @@ def main():
     train_dataset, val_dataset = random_split(dataset,[train_size,val_size])
 
     train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
-    val_loader = DataLoader(train_dataset, batch_size = 1, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
+    val_loader = DataLoader(val_dataset, batch_size = 1, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
 
     if not VAL_MODE:
         for epoch in range(NUM_EPOCHS):
