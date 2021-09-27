@@ -61,13 +61,8 @@ def train_fn(loader, model, optimizer, loss_fn, scaler):
     return loss
 
 def check_accuracy(loader, model):
-
     model.eval()
     IoU=[]
-
-union =0
-print('hello') if not union == 0 else print('goodbye')
-
     loop = tqdm(loader)
 
     with torch.no_grad():
