@@ -14,7 +14,7 @@ import numpy as np
 
 LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-BATCH_SIZE = 64
+BATCH_SIZE = 16
 NUM_EPOCHS = 60
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 360
@@ -26,10 +26,10 @@ SPLIT_RATIO = 0.9
 TRAIN_IMG_DIR = r'../Tokaido_dataset/img_syn_raw/train'
 TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labcmp'
 MODEL_SAVE_DIR = r'../Tokaido_dataset/model_save'
+MODEL_SAVE_NAME = (MODEL.__name__+'-' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:] + '-checkpoint.pth.tar')
 SUMMARY_WRITE_DIR = r'../Tokaido_dataset/summary_writer'
 PREDICTIONS_DIR = r'../Tokaido_dataset/predictions'
 VAL_MODE = True
-
 
 #
 # dataset.images[1]
@@ -81,8 +81,12 @@ def check_accuracy(loader, model):
                         union+1
                     else:
                         union+=1
-            IoU.append([intersection, union])
-            loop.set_postfix(IoU=intersection / union) if not union == 0 else loop.set_postfix(IoU=0)
+            if not union == 0:
+                IoU.append([intersection, union, intersection/union])
+                loop.set_postfix(IoU=intersection / union)
+            else:
+                IoU.append([intersection, union, 0.0])
+                loop.set_postfix(IoU=0.0)
             intersection = union = 0
     sum_intersection, sum_union, sum_IoU = [sum(x) for x in zip(*IoU)]
 
@@ -133,7 +137,7 @@ def main():
             checkpoint = {
             'state_dict': model.state_dict(),
             'optimizer':optimizer.state_dict(),
-            'epoch':epoch,
+            'epoch':+=1,
             'loss' :loss
             }
             save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
