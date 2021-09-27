@@ -137,7 +137,7 @@ def main():
             checkpoint = {
             'state_dict': model.state_dict(),
             'optimizer':optimizer.state_dict(),
-            'epoch':+=1,
+            'epoch':epoch,
             'loss' :loss
             }
             save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
