@@ -14,8 +14,8 @@ import numpy as np
 
 LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-BATCH_SIZE = 16
-NUM_EPOCHS = 4
+BATCH_SIZE = 64
+NUM_EPOCHS = 60
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
@@ -28,6 +28,8 @@ TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labcmp'
 MODEL_SAVE_DIR = r'../Tokaido_dataset/model_save'
 SUMMARY_WRITE_DIR = r'../Tokaido_dataset/summary_writer'
 PREDICTIONS_DIR = r'../Tokaido_dataset/predictions'
+VAL_MODE = True
+
 
 #
 # dataset.images[1]
@@ -63,7 +65,8 @@ def check_accuracy(loader, model):
     model.eval()
     IoU=[]
 
-
+union =0
+print('hello') if not union == 0 else print('goodbye')
 
     loop = tqdm(loader)
 
@@ -84,9 +87,11 @@ def check_accuracy(loader, model):
                     else:
                         union+=1
             IoU.append([intersection, union])
-            loop.set_postfix(IoU=intersection / union)
+            loop.set_postfix(IoU=intersection / union) if not union == 0 else loop.set_postfix(IoU=0)
             intersection = union = 0
     sum_intersection, sum_union, sum_IoU = [sum(x) for x in zip(*IoU)]
+
+    meanIoU = sum_intersection / sum_union
 
     return meanIoU, IoU
 
@@ -127,19 +132,22 @@ def main():
     train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
     val_loader = DataLoader(train_dataset, batch_size = 1, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
 
-    for epoch in range(NUM_EPOCHS):
-        loss = train_fn(train_loader, model, optimizer, loss_fn, scaler)
-        checkpoint = {
+    if not VAL_MODE:
+        for epoch in range(NUM_EPOCHS):
+            loss = train_fn(train_loader, model, optimizer, loss_fn, scaler)
+            checkpoint = {
             'state_dict': model.state_dict(),
             'optimizer':optimizer.state_dict(),
             'epoch':epoch,
             'loss' :loss
-        }
-        save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
+            }
+            save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
+    else:
+        meanIoU,IoU = check_accuracy(val_loader, model)
+        print('meanIoU: '+meanIoU)
+        np.savetxt('IoU.csv',IoU,delimiter=',')
 
-    meanIoU,IoU = check_accuracy(val_loader, model)
-    print('meanIoU: '+meanIoU)
-    np.savetxt('IoU.csv',IoU,delimiter=',')
+
 
 if __name__ =='__main__':
     main()
