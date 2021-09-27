@@ -78,7 +78,7 @@ def check_accuracy(loader, model):
                 for j in range(0,len(predictions[i])):
                     if predictions[i,j]==mask[i,j]:
                         intersection+=1
-                        union+1
+                        union+=1
                     else:
                         union+=1
             if not union == 0:
