@@ -143,7 +143,7 @@ def main():
             save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
     else:
         meanIoU,IoU = check_accuracy(val_loader, model)
-        print('meanIoU: '+meanIoU)
+        print('meanIoU: {:.2f}'.format(meanIoU))
         np.savetxt('IoU.csv',IoU,delimiter=',')
 
 
