@@ -6,6 +6,7 @@ import os
 import numpy as np
 import cv2
 from label_color_map import label_color_map as label_map
+from PIL import Image
 
 def save_checkpoint(state, filename = 'my_checkpoint.pth.tar'):
     print('==> saving checkpoint')
@@ -28,7 +29,7 @@ def save_prediction(model,dataset,index,folder=r'../Tokaido_dataset/predictions'
     file = dataset.images[index].replace('_Scene.png','_Prediction.png')
     print('Saving ',file)
     input,_ = dataset.__getitem__(index)
-    output = model(input[None, ...])
+    output = model(input[None, ...].to(device='cpu'))
     output = torch.argmax(output['out'].squeeze(), dim=0).to('cpu').numpy()
     image=dataset.getImage(index)
     prediction = draw_segmentation_map(output)
