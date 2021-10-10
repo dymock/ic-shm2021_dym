@@ -28,12 +28,12 @@ TRAIN_IMG_DIR = r'../Tokaido_dataset/img_syn_raw/train'
 TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labcmp'
 MODEL_SAVE_DIR = r'../Tokaido_dataset/model_save'
 MODEL_SAVE_NAME = (MODEL.__name__+'-' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:] + '-checkpoint.pth.tar')
-SUMMARY_WRITE_DIR = (r'../Dropbox/quicktransfer/summary_writer/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
-PREDICTIONS_DIR = (r'../Dropbox/quicktransfer/predictions/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
-VAL_MODE = False
+SUMMARY_WRITE_DIR = (r'../Tokaido_dataset/summary_writer/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
+PREDICTIONS_DIR = (r'../Tokaido_dataset/predictions/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
+VAL_MODE = True
 SEED = 0
 SAMPLE_PREDICTIONS=20
-FULLRES = False
+FULLRES = True
 
 
 def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, writer_step):
@@ -74,8 +74,8 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, wr
     return loss, writer_step, epoch_IoU
 
 def get_IoU(prediction,mask):
-    mask = mask.squeeze().numpy()
-    prediction = torch.argmax(prediction.squeeze(), dim=0).numpy()
+    mask = mask.squeeze().to(device='cpu').numpy()
+    prediction = torch.argmax(prediction.to(device='cpu').squeeze(), dim=0).numpy()
     intersection = (prediction == mask).sum()
     union = mask.shape[0]*mask.shape[1]
     return intersection, union
