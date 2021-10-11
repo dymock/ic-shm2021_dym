@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import fcn_resnet101 as MODEL
+from torchvision.models.segmentation import fcn_resnet50 as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
@@ -15,7 +15,7 @@ import random
 
 LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-BATCH_SIZE = 16
+BATCH_SIZE = 4
 NUM_EPOCHS = 60
 NUM_WORKERS = 8
 IMAGE_HEIGHT = 360
