@@ -24,22 +24,26 @@ def load_checkpoint(path, model, optimizer,device):
     return model, optimizer, total_epochs, loss, steps
 
 
-def save_prediction(model,dataset,index,folder=r'../Tokaido_dataset/predictions',fullres=False):
+def save_prediction(model,loader,sample_idxs,folder=r'../Tokaido_dataset/predictions',fullres=False):
     model.eval()
-    file = dataset.images[index].replace('_Scene.png','_Prediction.png')
-    print('Saving ',file)
-    input,_ = dataset.__getitem__(index)
-    output = model(input[None, ...].to(device='cpu'))
-    output = torch.argmax(output['out'].squeeze(), dim=0).to('cpu').numpy()
-    image=dataset.getImage(index)
-    prediction = draw_segmentation_map(output)
-    if fullres:
-        prediction=cv2.resize(prediction,dsize=(1920,1080),interpolation=cv2.INTER_CUBIC)
-    else:
-        image=cv2.resize(image,dsize=(640,360))
-    image = image_overlay(image,prediction)
-    image=Image.fromarray(image)
-    image.save(os.path.join(folder,file))
+    with torch.no_grad():
+        for idx, (input,target) in enumerate(loader):
+            if loader.dataset.indices[idx] in sample_idxs:
+                file = loader.dataset.dataset.images[loader.dataset.indices[idx]].replace('_Scene.png','_Prediction.png')
+                print('Saving ',file)
+                input=input.to(device='cpu')
+                output = model(input)
+                output = torch.argmax(output['out'].squeeze(), dim=0).to('cpu').numpy()
+                image=loader.dataset.dataset.getImage(loader.dataset.indices[idx])
+                prediction = draw_segmentation_map(output)
+                if fullres:
+                    prediction=cv2.resize(prediction,dsize=(1920,1080),interpolation=cv2.INTER_CUBIC)
+                else:
+                    image=cv2.resize(image,dsize=(640,360))
+
+                image = image_overlay(image,prediction)
+                image=Image.fromarray(image)
+                image.save(os.path.join(folder,file))
     model.train()
 
 def draw_segmentation_map(labels):

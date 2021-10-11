@@ -41,8 +41,8 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, wr
     loop = tqdm(loader)
     epoch_IoU=0
     batch_num=0
-    for batch_idx, (data,targets) in enumerate(loop):
-        data = data.to(device=DEVICE)
+    for batch_idx, (input,targets) in enumerate(loop):
+        input = input.to(device=DEVICE)
         targets = targets.to(device=DEVICE)
         # Forward pass
         predictions = model(data)
@@ -80,16 +80,15 @@ def get_IoU(prediction,mask):
     union = mask.shape[0]*mask.shape[1]
     return intersection, union
 
-
 def validation(loader, model):
     model.eval()
     IoU=[]
     loop = tqdm(loader)
 
     with torch.no_grad():
-        for batch,data in enumerate(loop):
-            image = data[0].to(device=DEVICE)
-            mask = data[1]
+        for batch, (input,target) in enumerate(loop):
+            image = input.to(device=DEVICE)
+            mask = target
             prediction = model(image)
             intersection, union = get_IoU(prediction['out'], mask)
 
@@ -134,7 +133,7 @@ def main():
     train_dataset, val_dataset = random_split(dataset,[train_size,val_size])
 
     train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
-    val_loader = DataLoader(val_dataset, batch_size = 1, num_workers = 1, pin_memory = PIN_MEMORY, shuffle = True)
+    val_loader = DataLoader(val_dataset, batch_size = 1, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = False)
 
     if not VAL_MODE:
         model.train()
@@ -158,9 +157,8 @@ def main():
 
     if (SAMPLE_PREDICTIONS > 0):
         random.seed(SEED)
-        sample_idxs = random.sample(range(0,dataset.__len__()),SAMPLE_PREDICTIONS)
-        for idx in sample_idxs:
-            save_prediction(model,dataset,idx,fullres=FULLRES,folder=PREDICTIONS_DIR)
+        sample_idxs = random.sample(val_loader.dataset.indices,SAMPLE_PREDICTIONS)
+        save_prediction(model,val_loader,sample_idxs,fullres=FULLRES,folder=PREDICTIONS_DIR)
 
 if __name__ =='__main__':
     main()
