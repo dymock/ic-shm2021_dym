@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import deeplabv3_mobilenet_v3_large as MODEL
+from torchvision.models.segmentation import lraspp_mobilenet_v3_large as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
@@ -30,7 +30,7 @@ MODEL_SAVE_DIR = r'../Tokaido_dataset/model_save'
 MODEL_SAVE_NAME = (MODEL.__name__+'-' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:] + '-checkpoint.pth.tar')
 SUMMARY_WRITE_DIR = (r'../Tokaido_dataset/summary_writer/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
 PREDICTIONS_DIR = (r'../Tokaido_dataset/predictions/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
-VAL_MODE = True
+VAL_MODE = False
 SEED = 0
 SAMPLE_PREDICTIONS=20
 FULLRES = True
@@ -45,7 +45,7 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, wr
         input = input.to(device=DEVICE)
         targets = targets.to(device=DEVICE)
         # Forward pass
-        predictions = model(data)
+        predictions = model(input)
         loss = loss_fn(predictions['out'], targets.long())
         batch_intersection = batch_union =0
         for i in range(0,len(targets)):
