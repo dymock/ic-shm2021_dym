@@ -109,6 +109,8 @@ def validation(loader, model):
 
 def main():
 
+    if DEVICE == 'cuda':
+        torch.cuda.empty_cache()
     torch.manual_seed(SEED)
     model = MODEL(num_classes=NUM_CLASSES).to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
