@@ -25,6 +25,7 @@ def load_checkpoint(path, model, optimizer,device):
 
 
 def save_prediction(model,loader,sample_idxs,folder=r'../Tokaido_dataset/predictions',fullres=False):
+    model.to(device='cpu')
     model.eval()
     with torch.no_grad():
         for idx, (input,target) in enumerate(loader):
