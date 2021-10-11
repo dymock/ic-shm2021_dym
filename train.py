@@ -153,7 +153,7 @@ def main():
     else:
         meanIoU,IoU = validation(val_loader, model)
         print('meanIoU: {:.2f}'.format(meanIoU))
-        np.savetxt('IoU.csv',IoU,delimiter=',')
+        np.savetxt(os.path.join(PREDICTIONS_DIR,'IoU.csv'),IoU,delimiter=',')
 
     if (SAMPLE_PREDICTIONS > 0):
         random.seed(SEED)
