@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import lraspp_mobilenet_v3_large as MODEL
+from torchvision.models.segmentation import fcn_resnet101 as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
@@ -39,14 +39,14 @@ FULLRES = True
 def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, writer_step):
 
     loop = tqdm(loader)
-    epoch_IoU=0
+    epoch_IoU=epoch_loss=0
     batch_num=0
     for batch_idx, (input,targets) in enumerate(loop):
         input = input.to(device=DEVICE)
         targets = targets.to(device=DEVICE)
         # Forward pass
         predictions = model(input)
-        loss = loss_fn(predictions['out'], targets.long())
+        batch_loss = loss_fn(predictions['out'], targets.long())
         batch_intersection = batch_union =0
         for i in range(0,len(targets)):
             intersection, union = get_IoU(predictions['out'][i],targets[i])
@@ -59,19 +59,21 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, wr
 
         # Backpropogation
         optimizer.zero_grad()
-        scaler.scale(loss).backward()
+        scaler.scale(batch_loss).backward()
         scaler.step(optimizer)
         scaler.update()
-        loop.set_postfix(loss=loss.item(), IoU=batch_IoU, total_epochs=total_epochs)
+        loop.set_postfix(loss=batch_loss.item(), IoU=batch_IoU, total_epochs=total_epochs)
 
         writer.add_scalar('Batch IoU', batch_IoU, global_step = writer_step)
-        writer.add_scalar('Batch Loss', loss, global_step = writer_step)
+        writer.add_scalar('Batch Loss', batch_loss, global_step = writer_step)
 
         writer_step+=1
         epoch_IoU+=batch_IoU
+        epoch_loss+=batch_loss
         batch_num+=1
-    epoch_IoU=epoch_IoU/batch_num
-    return loss, writer_step, epoch_IoU
+    epoch_IoU = epoch_IoU/batch_num
+    epoch_loss = epoch_loss/batch_num
+    return epoch_loss, writer_step, epoch_IoU
 
 def get_IoU(prediction,mask):
     mask = mask.squeeze().to(device='cpu').numpy()
