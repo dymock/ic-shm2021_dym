@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import fcn_resnet50 as MODEL
+from torchvision.models.segmentation import deeplabv3_resnet50 as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
@@ -17,7 +17,7 @@ LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 BATCH_SIZE = 4
 NUM_EPOCHS = 60
-NUM_WORKERS = 8
+NUM_WORKERS = 0
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
 NUM_CLASSES = 9
@@ -109,8 +109,8 @@ def validation(loader, model):
 
 def main():
 
-    if DEVICE == 'cuda':
-        torch.cuda.empty_cache()
+#    if DEVICE == 'cuda':
+#        torch.cuda.empty_cache()
     torch.manual_seed(SEED)
     model = MODEL(num_classes=NUM_CLASSES).to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
