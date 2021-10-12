@@ -90,9 +90,8 @@ def validation(loader, model):
     with torch.no_grad():
         for batch, (input,target) in enumerate(loop):
             image = input.to(device=DEVICE)
-            mask = target
             prediction = model(image)
-            intersection, union = get_IoU(prediction['out'], mask)
+            intersection, union = get_IoU(prediction['out'], target)
 
             if not union == 0:
                 IoU.append([intersection, union, intersection/union])
@@ -109,8 +108,8 @@ def validation(loader, model):
 
 def main():
 
-#    if DEVICE == 'cuda':
-#        torch.cuda.empty_cache()
+    if DEVICE == 'cuda':
+       torch.cuda.empty_cache()
     torch.manual_seed(SEED)
     model = MODEL(num_classes=NUM_CLASSES).to(DEVICE)
     loss_fn = nn.CrossEntropyLoss()
@@ -154,6 +153,9 @@ def main():
             'steps':writer_step
             }
             save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
+
+            if DEVICE == 'cuda':
+                torch.cuda.empty_cache()
     else:
         meanIoU,IoU = validation(val_loader, model)
         print('meanIoU: {:.2f}'.format(meanIoU))
@@ -163,6 +165,7 @@ def main():
         random.seed(SEED)
         sample_idxs = random.sample(val_loader.dataset.indices,SAMPLE_PREDICTIONS)
         save_prediction(model,val_loader,sample_idxs,fullres=FULLRES,folder=PREDICTIONS_DIR)
+
 
 if __name__ =='__main__':
     main()
