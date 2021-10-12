@@ -17,7 +17,7 @@ LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 BATCH_SIZE = 4
 NUM_EPOCHS = 60
-NUM_WORKERS = 0
+NUM_WORKERS = 8
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
 NUM_CLASSES = 9
@@ -62,14 +62,14 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, wr
         scaler.scale(batch_loss).backward()
         scaler.step(optimizer)
         scaler.update()
-        loop.set_postfix(loss=batch_loss.item(), IoU=batch_IoU, total_epochs=total_epochs)
+        loop.set_postfix(loss=batch_loss.detach().item(), IoU=batch_IoU, total_epochs=total_epochs)
 
         writer.add_scalar('Batch IoU', batch_IoU, global_step = writer_step)
         writer.add_scalar('Batch Loss', batch_loss, global_step = writer_step)
 
         writer_step+=1
         epoch_IoU+=batch_IoU
-        epoch_loss+=batch_loss
+        epoch_loss+=batch_loss.detach().item()
         batch_num+=1
     epoch_IoU = epoch_IoU/batch_num
     epoch_loss = epoch_loss/batch_num
