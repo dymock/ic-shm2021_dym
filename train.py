@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import deeplabv3_resnet50 as MODEL
+from torchvision.models.segmentation import lraspp_mobilenet_v3_large as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
@@ -16,21 +16,21 @@ import random
 LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 BATCH_SIZE = 4
-NUM_EPOCHS = 60
-NUM_WORKERS = 8
+NUM_EPOCHS = 59
+NUM_WORKERS = 0
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
-NUM_CLASSES = 9
+NUM_CLASSES = 4
 TRANSFORM_SCALE = 1
 PIN_MEMORY = True
 SPLIT_RATIO = 0.9
 TRAIN_IMG_DIR = r'../Tokaido_dataset/img_syn_raw/train'
-TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labcmp'
+TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labdmg'
 MODEL_SAVE_DIR = r'../Tokaido_dataset/model_save'
 MODEL_SAVE_NAME = (MODEL.__name__+'-' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:] + '-checkpoint.pth.tar')
 SUMMARY_WRITE_DIR = (r'../Tokaido_dataset/summary_writer/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
 PREDICTIONS_DIR = (r'../Tokaido_dataset/predictions/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
-VAL_MODE = False
+VAL_MODE = True
 SEED = 0
 SAMPLE_PREDICTIONS=20
 FULLRES = True
@@ -65,7 +65,7 @@ def train_fn(loader, model, optimizer, loss_fn, scaler, total_epochs, writer, wr
         loop.set_postfix(loss=batch_loss.detach().item(), IoU=batch_IoU, total_epochs=total_epochs)
 
         writer.add_scalar('Batch IoU', batch_IoU, global_step = writer_step)
-        writer.add_scalar('Batch Loss', batch_loss, global_step = writer_step)
+        writer.add_scalar('Batch Loss', batch_loss.detach().item(), global_step = writer_step)
 
         writer_step+=1
         epoch_IoU+=batch_IoU
@@ -126,8 +126,8 @@ def main():
 
     TOTAL_EPOCHS=0
     writer_step=0
-    if os.path.isfile(os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar'))):
-        model,optimizer,TOTAL_EPOCHS,loss,writer_step = load_checkpoint(os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')),model,optimizer,DEVICE)
+    if os.path.isfile(os.path.join(MODEL_SAVE_DIR, MODEL_SAVE_NAME)):
+        model,optimizer,TOTAL_EPOCHS,loss,writer_step = load_checkpoint(os.path.join(MODEL_SAVE_DIR, MODEL_SAVE_NAME),model,optimizer,DEVICE)
 
     dataset = TokaidoDataset(image_dir = TRAIN_IMG_DIR, mask_dir = TRAIN_MASK_DIR)
 
@@ -152,7 +152,7 @@ def main():
             'loss':loss,
             'steps':writer_step
             }
-            save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR,(MODEL.__name__ + '-checkpoint.pth.tar')))
+            save_checkpoint(checkpoint, filename = os.path.join(MODEL_SAVE_DIR, MODEL_SAVE_NAME))
 
             if DEVICE == 'cuda':
                 torch.cuda.empty_cache()
