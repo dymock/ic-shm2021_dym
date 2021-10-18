@@ -80,12 +80,12 @@ def get_IoU(prediction,mask):
     prediction = torch.argmax(prediction.to(device='cpu').squeeze(), dim=0).numpy()
     intersection = []
     union =[]
-    for i in range(0,num_classes):
+    for i in range(1,num_classes):
         intersection.append(((prediction == mask) & (mask == i)).sum())
         union.append(((prediction == i) ^ (mask == i)).sum())
         union[-1]+=intersection[-1]
-    intersection.append((prediction == mask).sum())
-    union.append(mask.shape[0]*mask.shape[1])
+    intersection.append(sum(intersection))
+    union.append(sum(union))
     IoU = [a / b for a, b in zip(intersection, union)]
 
     return IoU
