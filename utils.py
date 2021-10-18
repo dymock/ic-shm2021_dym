@@ -98,7 +98,6 @@ def generate_predictions(model,dataset,sample_idxs,fullres=False):
     IoU=[]
     with torch.no_grad():
         for idx in sample_idxs:
-            print('Generating image ', dataset.indices[idx])
             input,mask = dataset.__getitem__(idx)
             input = input.unsqueeze(0).to(device='cpu')
             output = model(input)
@@ -113,6 +112,7 @@ def generate_predictions(model,dataset,sample_idxs,fullres=False):
             image = image_overlay(image,prediction)
             images.append(Image.fromarray(image))
             image_names.append(dataset.dataset.images[dataset.indices[idx]])
+            print(dataset.dataset.images[dataset.indices[idx]],' - IoU: ', IoU[-1][-1])
 
 
     model.train()
