@@ -40,13 +40,13 @@ def save_predictions(model,loader,sample_idxs,folder=r'../Tokaido_dataset/predic
     model.eval()
     with torch.no_grad():
         for idx, (input,target) in enumerate(loader):
-            if loader.dataset.dataset.indices[idx] in sample_idxs:
-                file = loader.dataset.dataset.images[loader.dataset.dataset.indices[idx]].replace('_Scene.png','_Prediction.png')
+            if loader.dataset.indices[idx] in sample_idxs:
+                file = loader.dataset.dataset.images[loader.dataset.indices[idx]].replace('_Scene.png','_Prediction.png')
                 print('Saving ',file)
                 input=input.to(device='cpu')
                 output = model(input)
                 output = torch.argmax(output['out'].squeeze(), dim=0).to('cpu').numpy()
-                image=loader.dataset.dataset.getImage(loader.dataset.dataset.indices[idx])
+                image=loader.dataset.dataset.getImage(loader.dataset.indices[idx])
                 prediction = draw_segmentation_map(output)
                 if fullres:
                     prediction=cv2.resize(prediction,dsize=(1920,1080),interpolation=cv2.INTER_CUBIC)
@@ -58,17 +58,51 @@ def save_predictions(model,loader,sample_idxs,folder=r'../Tokaido_dataset/predic
                 image.save(os.path.join(folder,file))
     model.train()
 
+def get_mask(dataset, sample_idxs, fullres = False):
+    images=[]
+    image_names=[]
+    for idx in sample_idxs:
+        _,mask = dataset.__getitem__(idx)
+        image=dataset.dataset.getImage(dataset.indices[idx])
+        mask = draw_segmentation_map(mask)
+        if fullres:
+            mask=cv2.resize(mask,dsize=(1920,1080),interpolation=cv2.INTER_CUBIC)
+        else:
+            image=cv2.resize(image,dsize=(640,360))
+        image = image_overlay(image,mask)
+        images.append(Image.fromarray(image))
+        image_names.append(dataset.dataset.images[dataset.indices[idx]])
+    return images, image_names
+
+def get_IoU(prediction,mask):
+    mask = mask.squeeze().to(device='cpu').numpy()
+    num_classes = prediction.shape[1]
+    prediction = torch.argmax(prediction.to(device='cpu').squeeze(), dim=0).numpy()
+    intersection = []
+    union =[]
+    for i in range(0,num_classes):
+        intersection.append(((prediction == mask) & (mask == i)).sum())
+        union.append(((prediction == i) ^ (mask == i)).sum())
+        union[-1]+=intersection[-1]
+    intersection.append((prediction == mask).sum())
+    union.append(mask.shape[0]*mask.shape[1])
+    IoU = [a / b for a, b in zip(intersection, union)]
+
+    return IoU
+
 def generate_predictions(model,dataset,sample_idxs,fullres=False):
     model.to(device='cpu')
     model.eval()
     images=[]
     image_names=[]
+    IoU=[]
     with torch.no_grad():
         for idx in sample_idxs:
             print('Generating image ', dataset.indices[idx])
-            input,_ = dataset.__getitem__(idx)
+            input,mask = dataset.__getitem__(idx)
             input = input.unsqueeze(0).to(device='cpu')
             output = model(input)
+            IoU.append(get_IoU(output['out'],mask))
             output = torch.argmax(output['out'].squeeze(), dim=0).to('cpu').numpy()
             image=dataset.dataset.getImage(dataset.indices[idx])
             prediction = draw_segmentation_map(output)
@@ -79,8 +113,10 @@ def generate_predictions(model,dataset,sample_idxs,fullres=False):
             image = image_overlay(image,prediction)
             images.append(Image.fromarray(image))
             image_names.append(dataset.dataset.images[dataset.indices[idx]])
+
+
     model.train()
-    return images, image_names
+    return images, image_names, IoU
 
 def draw_segmentation_map(labels): #thank you Zhipeng > https://github.com/anucecszl/CV_competition
     # create the RGB version of labels for model outputs
