@@ -36,7 +36,7 @@ TRAIN_IMG_DIR = '../Tokaido_dataset/img_syn_raw/train'
 MODEL_SAVE_DIR='../Tokaido_dataset/model_save'
 PRED_PARENT_DIR='../Dropbox/comparison'
 
-SAMPLE_PREDICTIONS=2
+SAMPLE_PREDICTIONS=50
 SPLIT_RATIO=0.9
 FULLRES = True
 DEVICE='cpu'
