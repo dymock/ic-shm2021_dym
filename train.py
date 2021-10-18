@@ -1,11 +1,11 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import lraspp_mobilenet_v3_large as MODEL
+from torchvision.models.segmentation import deeplabv3_resnet101 as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
-from utils import (load_checkpoint, save_checkpoint, save_prediction)
+from utils import (load_checkpoint, save_checkpoint, save_predictions)
 from dataset_prep import TokaidoDataset
 from torch.utils.data import DataLoader
 from torch.utils.data import random_split
@@ -15,22 +15,22 @@ import random
 
 LEARNING_RATE = 1E-4
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-BATCH_SIZE = 4
-NUM_EPOCHS = 59
+BATCH_SIZE = 2
+NUM_EPOCHS = 60
 NUM_WORKERS = 0
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
-NUM_CLASSES = 4
+NUM_CLASSES = 9
 TRANSFORM_SCALE = 1
 PIN_MEMORY = True
 SPLIT_RATIO = 0.9
 TRAIN_IMG_DIR = r'../Tokaido_dataset/img_syn_raw/train'
-TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labdmg'
+TRAIN_MASK_DIR = r'../Tokaido_dataset/synthetic/train/labcmp'
 MODEL_SAVE_DIR = r'../Tokaido_dataset/model_save'
 MODEL_SAVE_NAME = (MODEL.__name__+'-' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:] + '-checkpoint.pth.tar')
 SUMMARY_WRITE_DIR = (r'../Tokaido_dataset/summary_writer/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
 PREDICTIONS_DIR = (r'../Tokaido_dataset/predictions/' + MODEL.__name__+'_' + TRAIN_MASK_DIR[len(TRAIN_MASK_DIR)-3:])
-VAL_MODE = True
+VAL_MODE = False
 SEED = 0
 SAMPLE_PREDICTIONS=20
 FULLRES = True
@@ -135,7 +135,7 @@ def main():
     val_size=len(dataset)-train_size
     train_dataset, val_dataset = random_split(dataset,[train_size,val_size])
 
-    train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True)
+    train_loader = DataLoader(train_dataset, batch_size = BATCH_SIZE, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = True, drop_last = True)
     val_loader = DataLoader(val_dataset, batch_size = 1, num_workers = NUM_WORKERS, pin_memory = PIN_MEMORY, shuffle = False)
 
     if not VAL_MODE:
@@ -164,7 +164,7 @@ def main():
     if (SAMPLE_PREDICTIONS > 0):
         random.seed(SEED)
         sample_idxs = random.sample(val_loader.dataset.indices,SAMPLE_PREDICTIONS)
-        save_prediction(model,val_loader,sample_idxs,fullres=FULLRES,folder=PREDICTIONS_DIR)
+        save_predictions(model,val_loader,sample_idxs,fullres=FULLRES,folder=PREDICTIONS_DIR)
 
 
 if __name__ =='__main__':
