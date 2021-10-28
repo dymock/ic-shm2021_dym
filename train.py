@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torchvision.models.segmentation import deeplabv3_resnet101 as MODEL
+from torchvision.models.segmentation import fcn_resnet101 as MODEL
 import torchvision.transforms as transforms
 from tqdm import tqdm
 import os
@@ -20,7 +20,7 @@ NUM_EPOCHS = 60
 NUM_WORKERS = 0
 IMAGE_HEIGHT = 360
 IMAGE_WIDTH = 640
-NUM_CLASSES = 9
+NUM_CLASSES = 4 
 TRANSFORM_SCALE = 1
 PIN_MEMORY = True
 SPLIT_RATIO = 0.9
