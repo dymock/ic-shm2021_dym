@@ -21,6 +21,12 @@ MODEL_CONFIGS=[
 {'model':segmentation.deeplabv3_resnet101,
 'batch_size':1,
 'num_workers':0},
+{'model':segmentation.fcn_resnet50,
+'batch_size':1,
+'num_workers':0},
+{'model':segmentation.fcn_resnet101,
+'batch_size':1,
+'num_workers':0},
 ]
 
 MASK_CONFIGS =[
@@ -36,7 +42,7 @@ TRAIN_IMG_DIR = '../Tokaido_dataset/img_syn_raw/train'
 MODEL_SAVE_DIR='../Tokaido_dataset/model_save'
 PRED_PARENT_DIR='../Dropbox/comparison'
 
-SAMPLE_PREDICTIONS=50
+SAMPLE_PREDICTIONS=20
 SPLIT_RATIO=0.9
 FULLRES = True
 DEVICE='cpu'
@@ -89,7 +95,7 @@ def main():
                 print('Error loading '+MASK['type']+'-'+MODEL['model'].__name__)
 
             # run model for dataset sample indices
-            images, image_names, IoU = utils.generate_predictions(model,val_dataset,sample_idxs)
+            images, image_names, IoU = utils.generate_predictions(model,val_dataset,sample_idxs,FULLRES)
             image_names = [i.replace('_Scene.png','_Prediction') for i in image_names]
             for i in range(0,len(images)):
                 path=os.path.join(PRED_PARENT_DIR,MASK['type'],image_names[i])
